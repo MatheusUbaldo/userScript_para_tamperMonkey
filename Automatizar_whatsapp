@@ -1,0 +1,163 @@
+// ==UserScript==
+// @name         Atendente
+// @namespace    http://tampermonkey.net/
+// @version      2026-05-13
+// @description  Adiciona automaticamente o nome do atendente antes da mensagem no WhatsApp Web
+// @author       You
+// @match        https://web.whatsapp.com/*
+// @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
+// @grant        none
+// ==/UserScript==
+
+
+// Função autoexecutável para evitar poluir escopo global
+(function () {
+
+    // Ativa modo estrito do JavaScript
+    'use strict';
+
+
+    // Abre popup solicitando nome do atendente
+    const atendente = prompt("Nome do atendente:");
+
+
+    // Variável usada para evitar loop infinito
+    let isSending = false;
+
+
+    // Escuta todas teclas pressionadas na página
+    document.addEventListener('keydown', async function(e) {
+
+        // Se já estiver enviando mensagem artificialmente, interrompe
+        if (isSending) return;
+
+
+        // Detecta ENTER sem SHIFT
+        // SHIFT+ENTER continua funcionando como quebra de linha
+        if (e.key === 'Enter' && !e.shiftKey) {
+
+
+            // Busca todas caixas editáveis do WhatsApp
+            const caixas = document.querySelectorAll('[contenteditable="true"]');
+
+
+            // Pega a última caixa editável encontrada
+            // Geralmente é a caixa principal de mensagem
+            const caixa = caixas[caixas.length - 1];
+
+
+            // Se não existir caixa, interrompe execução
+            if (!caixa) return;
+
+
+            // Captura texto digitado
+            let texto = caixa.innerText;
+
+
+            // Evita adicionar nome duplicado
+            // Exemplo:
+            // [Matheus][Matheus]
+            if (texto.startsWith(`[${atendente}]`)) return;
+
+
+            // Cancela comportamento original do ENTER
+            // para assumir controle total do envio
+            e.preventDefault();
+
+            // Impede propagação do evento
+            e.stopPropagation();
+
+            // Impede outros listeners do WhatsApp
+            e.stopImmediatePropagation();
+
+
+            // Cria objeto Range para manipular cursor
+            const range = document.createRange();
+
+
+            // Posiciona cursor no início da caixa
+            range.setStart(caixa.firstChild || caixa, 0);
+
+            // Fecha seleção no ponto inicial
+            range.collapse(true);
+
+
+            // Obtém seleção atual do navegador
+            const sel = window.getSelection();
+
+
+            // Remove seleções existentes
+            sel.removeAllRanges();
+
+
+            // Aplica nova seleção
+            sel.addRange(range);
+
+
+            // Garante foco na caixa
+            caixa.focus();
+
+
+            // Dispara evento input
+            // Alguns frameworks dependem disso
+            caixa.dispatchEvent(
+                new Event('input', { bubbles: true })
+            );
+
+
+            // Pequeno delay para sincronizar DOM
+            await new Promise(r => setTimeout(r, 100));
+
+
+            // Insere texto no cursor atual
+            // Adiciona prefixo do atendente
+            document.execCommand(
+                'insertText',
+                false,
+                `[${atendente}] `
+            );
+
+
+            // Delay antes de enviar
+            await new Promise(r => setTimeout(r, 100));
+
+
+            // Ativa trava anti-loop
+            isSending = true;
+
+
+            // Cria evento ENTER artificial
+            const enterEvent = new KeyboardEvent('keydown', {
+
+                // Nome da tecla
+                key: 'Enter',
+
+                // Código físico da tecla
+                code: 'Enter',
+
+                // Compatibilidade antiga
+                which: 13,
+
+                // Compatibilidade antiga
+                keyCode: 13,
+
+                // Permite propagação
+                bubbles: true
+            });
+
+
+            // Dispara ENTER artificial
+            caixa.dispatchEvent(enterEvent);
+
+
+            // Libera trava após pequeno tempo
+            setTimeout(() => {
+
+                isSending = false;
+
+            }, 300);
+        }
+
+    }, true);
+
+})();
