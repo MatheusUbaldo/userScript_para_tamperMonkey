@@ -56,7 +56,7 @@
 
             // Evita adicionar nome duplicado
             // Exemplo:
-            // [Matheus][Matheus]
+            // [Atendente][Atendente]
             if (texto.startsWith(`[${atendente}]`)) return;
 
 
