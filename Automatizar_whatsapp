@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      2026-05-13
 // @description  Adiciona automaticamente o nome do atendente antes da mensagem no WhatsApp Web
-// @author       You
+// @author       Matheus Ubaldo
 // @match        https://web.whatsapp.com/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        none
